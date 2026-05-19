@@ -4,6 +4,8 @@ from fastapi.responses import Response
 import io
 from PIL import Image
 
+_rembg_session = None
+
 router = APIRouter(prefix="/tattoo", tags=["Tattoo AR"])
 
 
@@ -74,9 +76,14 @@ async def remove_bg(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="Archivo vacío")
         
         try:
-            # 1. Intentar rembg (remoción avanzada por IA)
+            # 1. Intentar rembg (remoción avanzada por IA) con modelo ligero u2netp
             from rembg import remove
-            raw_result = remove(data)
+            global _rembg_session
+            if _rembg_session is None:
+                from rembg import new_session
+                print("📦 Inicializando sesión de rembg con modelo ligero u2netp...")
+                _rembg_session = new_session("u2netp")
+            raw_result = remove(data, session=_rembg_session)
             # 2. Aplicar transparencia inteligente para limpiar halos blancos y bordes
             result = apply_smart_transparency(raw_result)
         except Exception as rembg_err:
