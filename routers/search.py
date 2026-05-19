@@ -62,7 +62,11 @@ def get_feed(
 
     # Feed inteligente si tiene embedding
     if current_user and current_user.preference_embedding is not None:
-        vector_str = str(current_user.preference_embedding).replace("'", "")
+        # Asegurarnos de que formateamos bien el vector para pgvector (separado por comas)
+        pref_emb = current_user.preference_embedding
+        # Si es un numpy array u otro tipo, iteramos y unimos con comas
+        vector_str = "[" + ",".join(map(str, pref_emb)) + "]"
+        
         resultados = db.execute(
             text(f"""
                 SELECT p.id, p.artist_id, p.image_url, p.description, p.style_tag, p.ar_image_url, u.avatar_url, a.shop_name 
@@ -108,7 +112,8 @@ def get_popular_searches(limit: int = 6, db: Session = Depends(database.get_db))
 def search_tattoos(
     query: str = Query(..., description="Lo que el usuario está buscando (ej: 'lobo oscuro')"),
     limit: int = Query(20, description="Cuántos resultados devolver"),
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
+    current_user: Optional[models.Profile] = Depends(auth.get_current_user_optional)
 ):
     # =======================================================
     # ⚡ 1. LA CACHÉ: ¿Alguien ha buscado esto antes?
@@ -187,6 +192,31 @@ def search_tattoos(
              vector_str = "[" + ",".join(map(str, vector_busqueda)) + "]"
         else:
              vector_str = vector_busqueda # Si viene de caché ya es un string/vector de la DB
+
+        # 🚀 NOVEDAD: Alimentamos el algoritmo del Feed "Para ti" con esta búsqueda
+        if current_user:
+            import json
+            try:
+                # Asegurarnos de que tenemos una lista de floats
+                if isinstance(vector_busqueda, str):
+                    vector_list = json.loads(vector_busqueda)
+                else:
+                    vector_list = list(vector_busqueda)
+                
+                # Solucionado el error de validación para arrays de numpy: usar 'is None' o revisar tamaño
+                if current_user.preference_embedding is None or len(current_user.preference_embedding) == 0:
+                    current_user.preference_embedding = vector_list
+                else:
+                    # Media móvil: 70% preferencias antiguas + 30% la búsqueda actual
+                    current_user.preference_embedding = [
+                        (float(viejo) * 0.7) + (float(nuevo) * 0.3)
+                        for viejo, nuevo in zip(current_user.preference_embedding, vector_list)
+                    ]
+                db.commit()
+                print("[FEED ALGORITHM] Vector del usuario actualizado con su última búsqueda.")
+            except Exception as e:
+                db.rollback()
+                print(f"[ERROR] Fallo al actualizar preferencias con la búsqueda: {e}")
 
         # Magia de pgvector: El operador <=> calcula la "Distancia Coseno" 
         # (qué tan similares son los conceptos de 0 a 1).
