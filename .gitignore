@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+.env
+firebase-adminsdk.json
+test_push.py
+simular_mensaje.py
+simular_reserva.py
+simular_presupuesto.py
