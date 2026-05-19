@@ -5,7 +5,6 @@ import database, models, schemas, auth
 import shutil
 from datetime import datetime
 from utils.storage import upload_file_to_supabase, delete_file_from_supabase
-import google.generativeai as genai
 from PIL import Image
 import io
 import os
@@ -16,10 +15,8 @@ import json as json_lib
 from utils.ar_processor import generar_stencil_ar
 import hashlib
 
-# CONFIGURACIÓN DE GEMINI
+# CONFIGURACIÓN DE GEMINI SE HACE DENTRO DE LAS FUNCIONES
 api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
 
 router = APIRouter(prefix="/artists", tags=["Artists"])
 
@@ -196,6 +193,9 @@ async def upload_certificate(
     verification_status = "Pendiente Revisión"
     
     try:
+        import google.generativeai as genai
+        if api_key:
+            genai.configure(api_key=api_key)
         img = Image.open(io.BytesIO(file_bytes))
         model = genai.GenerativeModel('gemini-flash-latest')
         
@@ -329,6 +329,8 @@ async def create_post(
     if api_key:
         print("[IA SCAN] Pasando filtro Anti-Basura + Analisis Multimodal de Gemini...")
         try:
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
             img = Image.open(io.BytesIO(file_bytes))
             model = genai.GenerativeModel('gemini-flash-latest')
             
@@ -448,6 +450,8 @@ async def create_post(
     
     if texto_para_embedding.strip():
         try:
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
             print(f"[EMBEDDING] Calculando embedding: {texto_para_embedding[:100]}...")
             response = genai.embed_content(
                 model="models/gemini-embedding-001",

@@ -1,7 +1,6 @@
 # api/routers/tattoo_ar.py
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import Response
-from rembg import remove
 import io
 from PIL import Image
 
@@ -76,6 +75,7 @@ async def remove_bg(file: UploadFile = File(...)):
         
         try:
             # 1. Intentar rembg (remoción avanzada por IA)
+            from rembg import remove
             raw_result = remove(data)
             # 2. Aplicar transparencia inteligente para limpiar halos blancos y bordes
             result = apply_smart_transparency(raw_result)
