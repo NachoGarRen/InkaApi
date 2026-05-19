@@ -17,7 +17,9 @@ if "SSL_CERT_FILE" in os.environ:
 # Importamos TODOS los routers
 from routers import auth, artists, bookings, users, content, messages, tattoo_ar
 
-Base.metadata.create_all(bind=engine)
+# IMPORTANTE: En producción (Render) no usamos create_all porque puede bloquear el arranque 
+# si la conexión de Supabase tarda en responder. Las tablas ya existen.
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Tattoo Art API with Supabase")
 
