@@ -6,7 +6,6 @@ import database, models, schemas, auth
 # IMPORTS PARA IA Y LIMPIEZA
 import os
 import requests
-import google.generativeai as genai
 from PIL import Image
 import io
 from supabase import create_client, Client  # Para poder borrar archivos del Storage
@@ -15,8 +14,6 @@ router = APIRouter(prefix="/content", tags=["Content"])
 
 # --- CONFIGURACIÓN DE IA Y SUPABASE ---
 api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
 
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
@@ -41,6 +38,9 @@ def validar_imagen_tatuaje(image_url: str) -> bool:
         img = Image.open(io.BytesIO(respuesta_img.content))
         
         # Llamamos al modelo ultrarrápido de visión
+        import google.generativeai as genai
+        if api_key:
+            genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-flash-latest')
         
         prompt = """

@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-from rembg import remove
-
 def generar_stencil_ar(file_bytes: bytes) -> bytes:
     """
     Pipeline de Visión Artificial Avanzado v3.0 (Senior Grade) para extraer tatuajes.
@@ -66,6 +64,7 @@ def generar_stencil_ar(file_bytes: bytes) -> bytes:
         
         # --- PASO 1: Eliminar fondo con IA (rembg) ---
         print("🪄 AR Pipeline v3.0: Paso 1 - Eliminando fondo con rembg...")
+        from rembg import remove
         brazo_recortado_bytes = remove(file_bytes)
         nparr = np.frombuffer(brazo_recortado_bytes, np.uint8)
         img_recortada = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
