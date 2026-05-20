@@ -407,8 +407,13 @@ async def create_post(
         except HTTPException:
             raise
         except Exception as e:
-            print(f"[ERROR] Error en el filtro Gemini: {e}")
-            raise HTTPException(status_code=500, detail="Error validando la imagen.")
+            print(f"[WARNING] Falló la verificación de Gemini (límite de cuota o error de red): {e}")
+            print("[WARNING] Bypasseando filtro de moderación para evitar bloquear la subida.")
+            # Valores por defecto para permitir que continúe sin tirar 500 Internal Server Error
+            es_tatuaje = True
+            texto_inapropiado = False
+            descripcion_tecnica = "tatuaje, arte, diseño"
+            texto_ia_embedding = descripcion_tecnica
     
     # =======================================================
     # 2. Subir a Supabase la original
