@@ -173,3 +173,12 @@ class Follow(Base):
     followed_id = Column(UUID(as_uuid=True), ForeignKey("artists.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     __table_args__ = (UniqueConstraint('follower_id', 'followed_id', name='uix_follower_followed'),)
+
+class AppFeedback(Base):
+    __tablename__ = "app_feedback"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)
+    message = Column(Text, nullable=False)
+    image_url = Column(String, nullable=True)
+    status = Column(String, default="pendiente")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
